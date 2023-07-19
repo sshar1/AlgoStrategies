@@ -7,19 +7,6 @@ import json
 from math import *
 import copy
 
-"""
-Most of the algo code you write will be in this file unless you create new
-modules yourself. Start by modifying the 'on_turn' function.
-
-Advanced strategy tips:
-
-  - You can analyze action frames by modifying on_action_frame function
-
-  - The GameState.map object can be manually manipulated to create hypothetical
-  board states. Though, we recommended making a copy of the map to preserve
-  the actual current map state.
-"""
-
 class AlgoStrategy(gamelib.AlgoCore):
     def __init__(self):
         super().__init__()
@@ -50,13 +37,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         self.game_state = None
 
     def on_turn(self, turn_state):
-        """
-        This function is called every turn with the game state wrapper as
-        an argument. The wrapper stores the state of the arena and has methods
-        for querying its state, allocating your current resources as planned
-        unit deployments, and transmitting your intended deployments to the
-        game engine.
-        """
         game_state = gamelib.GameState(self.config, turn_state)
         self.hypothetical_state = gamelib.GameState(self.config, turn_state)
         self.game_state = game_state
@@ -73,9 +53,6 @@ class AlgoStrategy(gamelib.AlgoCore):
     """
 
     def starter_strategy(self, game_state):
-        """
-        Start by placing wall funnel and turrets. Also infiltrators at ends of wall
-        """
         # First, place basic defenses
         self.base_funnel(game_state)
 
@@ -146,10 +123,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.get_resource(SP, 0) >= 4:
             self.place_supports(game_state)
 
-        # Center turret walls
-        # if game_state.turn_number >= 8:
-        #     self.place_L_walls(game_state)
-
         # Interceptors
         if (game_state.turn_number < 10 and game_state.get_resource(MP, 1) > 10) or game_state.turn_number < 3:
             self.spawn_interceptors(game_state)
@@ -215,13 +188,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.get_resource(SP, 0) > 16 and game_state.turn_number >= 10:
             game_state.attempt_upgrade(support_locations)
 
-    # def place_L_walls(self, game_state):
-    #     wall_locations_L = [[10, 10], [10, 11], [9, 11], [8, 11]]
-    #     wall_locations_R = [[17, 10], [17, 11], [18, 11], [19, 11]]
-
-    #     game_state.attempt_spawn(WALL, wall_locations_L + wall_locations_R)
-    #     game_state.attempt_upgrade(wall_locations_L + wall_locations_R)
-
     def spawn_interceptors(self, game_state):
         num_interceptors = self.get_interceptor_num(game_state)
         interceptor_locations = [[1, 12], [26, 12]]
@@ -237,11 +203,6 @@ class AlgoStrategy(gamelib.AlgoCore):
             game_state.attempt_spawn(INTERCEPTOR, interceptor_locations)
 
     def least_damage_interceptor_spawn(self, game_state, location_options):
-        """
-        This function will help us guess which location is the safest to spawn moving units from.
-        It gets the path the unit will take then checks locations on that path to
-        estimate the path's damage risk.
-        """
         damages = []
         # Get the damage estimate each path will take
         for location in location_options:
@@ -372,7 +333,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         Processing the action frames is complicated so we only suggest it if you have time and experience.
         Full doc on format of a game frame at in json-docs.html in the root of the Starterkit.
         """
-        # Let's record at what position we get scored on
         state = json.loads(turn_string)
         events = state["events"]
         breaches = events["breach"]
@@ -381,28 +341,22 @@ class AlgoStrategy(gamelib.AlgoCore):
         if self.last_enemy_spawn_update != spawns:
             self.last_enemy_spawn_update = spawns
 
-            # hypothetical_state = copy.deepcopy(self.game_state)
+            for spawn in spawns:
+                if spawn[1] == 0:
+                    self.hypothetical_state.game_map.add_unit(WALL, spawn[0], spawn[3]-1)
+                elif spawn[1] == 1:
+                    self.hypothetical_state.game_map.add_unit(SUPPORT, spawn[0], spawn[3]-1)
+                elif spawn[1] == 2:
+                    self.hypothetical_state.game_map.add_unit(TURRET, spawn[0], spawn[3]-1)
 
-            # self.hypothetical_state.game_map.add_unit(self.hypothetical_state.WALL, [15, 11], 0)
+            safest_spawn, least_damage = self.least_damage_spawn(self.hypothetical_state)
+            path_blocked, end_location = self.wall_blocking_path(self.hypothetical_state, safest_spawn)
 
-            # for spawn in spawns:
-            #     # if spawn[3] == 2 and spawn[1] == 0: # Enemy wall
-            #     #     gamelib.debug_write('wall spawned at ' + str(spawn[0]))
-            #     if spawn[1] == 0:
-            #         hypothetical_state.game_map.add_unit(WALL, spawn[0], spawn[3]-1)
-            #     elif spawn[1] == 1:
-            #         hypothetical_state.game_map.add_unit(SUPPORT, spawn[0], spawn[3]-1)
-            #     elif spawn[1] == 2:
-            #         hypothetical_state.game_map.add_unit(TURRET, spawn[0], spawn[3]-1)
+            gamelib.debug_write('END LOCATION IS ' + str(end_location), path_blocked)
 
-            # safest_spawn, least_damage = self.least_damage_spawn(hypothetical_state)
-            # path_blocked, end_location = self.wall_blocking_path(hypothetical_state, safest_spawn)
-
-            # gamelib.debug_write('END LOCATION IS ' + str(end_location), path_blocked)
-
-            # if path_blocked:
-            #     gamelib.debug_write('USING INFILTRATOR COUNTER STRAT')
-            #     self.counter_infiltrator_strat = True
+            if path_blocked:
+                gamelib.debug_write('USING INFILTRATOR COUNTER STRAT')
+                self.counter_infiltrator_strat = True
 
         for breach in breaches:
             location = breach[0]

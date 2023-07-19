@@ -58,6 +58,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         game engine.
         """
         game_state = gamelib.GameState(self.config, turn_state)
+        self.hypothetical_state = gamelib.GameState(self.config, turn_state)
         self.game_state = game_state
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
@@ -380,26 +381,28 @@ class AlgoStrategy(gamelib.AlgoCore):
         if self.last_enemy_spawn_update != spawns:
             self.last_enemy_spawn_update = spawns
 
-            hypothetical_state = copy.deepcopy(self.game_state)
+            # hypothetical_state = copy.deepcopy(self.game_state)
 
-            for spawn in spawns:
-                # if spawn[3] == 2 and spawn[1] == 0: # Enemy wall
-                #     gamelib.debug_write('wall spawned at ' + str(spawn[0]))
-                if spawn[1] == 0:
-                    hypothetical_state.game_map.add_unit(WALL, spawn[0], spawn[3]-1)
-                elif spawn[1] == 1:
-                    hypothetical_state.game_map.add_unit(SUPPORT, spawn[0], spawn[3]-1)
-                elif spawn[1] == 2:
-                    hypothetical_state.game_map.add_unit(TURRET, spawn[0], spawn[3]-1)
+            # self.hypothetical_state.game_map.add_unit(self.hypothetical_state.WALL, [15, 11], 0)
 
-            safest_spawn, least_damage = self.least_damage_spawn(hypothetical_state)
-            path_blocked, end_location = self.wall_blocking_path(hypothetical_state, safest_spawn)
+            # for spawn in spawns:
+            #     # if spawn[3] == 2 and spawn[1] == 0: # Enemy wall
+            #     #     gamelib.debug_write('wall spawned at ' + str(spawn[0]))
+            #     if spawn[1] == 0:
+            #         hypothetical_state.game_map.add_unit(WALL, spawn[0], spawn[3]-1)
+            #     elif spawn[1] == 1:
+            #         hypothetical_state.game_map.add_unit(SUPPORT, spawn[0], spawn[3]-1)
+            #     elif spawn[1] == 2:
+            #         hypothetical_state.game_map.add_unit(TURRET, spawn[0], spawn[3]-1)
 
-            gamelib.debug_write('END LOCATION IS ' + str(end_location), path_blocked)
+            # safest_spawn, least_damage = self.least_damage_spawn(hypothetical_state)
+            # path_blocked, end_location = self.wall_blocking_path(hypothetical_state, safest_spawn)
 
-            if path_blocked:
-                gamelib.debug_write('USING INFILTRATOR COUNTER STRAT')
-                self.counter_infiltrator_strat = True
+            # gamelib.debug_write('END LOCATION IS ' + str(end_location), path_blocked)
+
+            # if path_blocked:
+            #     gamelib.debug_write('USING INFILTRATOR COUNTER STRAT')
+            #     self.counter_infiltrator_strat = True
 
         for breach in breaches:
             location = breach[0]

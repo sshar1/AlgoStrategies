@@ -31,10 +31,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         SP = 0
         # This is a good place to do initial setup
         self.scored_on_locations = []
-        self.current_infiltrator_wall_side = None
-        self.counter_infiltrator_strat = False
-        self.last_enemy_spawn_update = []
-        self.game_state = None
 
     def on_turn(self, turn_state):
         game_state = gamelib.GameState(self.config, turn_state)
@@ -62,34 +58,37 @@ class AlgoStrategy(gamelib.AlgoCore):
 
             suicide_scout_spawn = []
             attacker_scout_spawn = []
+            demolisher_spawn = []
 
             if self.get_location_side(game_state, safest_spawn) == game_state.game_map.TOP_RIGHT:
                 suicide_scout_spawn = [20, 6]
                 attacker_scout_spawn = [18, 4]
+                demolisher_spawn = [16, 2]
             else:
                 suicide_scout_spawn = [4, 9]
                 attacker_scout_spawn = [13, 0]
+                demolisher_spawn = [11, 2]
 
             damage = self.get_damage_at_spawn(game_state, suicide_scout_spawn)
 
             if self.should_spawn_scouts(game_state, damage):
                 self.scout_spam(game_state)
             elif self.should_spawn_demolishers(game_state, damage):
-                self.demolisher_spam(game_state, safest_spawn)
+                self.demolisher_spam(game_state, demolisher_spawn)
 
     def should_spawn_scouts(self, game_state, damage_taken):
         if damage_taken == 0: return True
 
         num_scouts = self.get_attacker_scout_count(game_state)
 
-        return ((num_scouts * 17) / damage_taken) >= 2
+        return ((num_scouts * 17) / damage_taken) >= 0.7
 
     def should_spawn_demolishers(self, game_state, damage_taken):
         if damage_taken == 0: return True
 
         num_demolishers = self.get_demolisher_count(game_state)
 
-        return ((num_demolishers * 5) / damage_taken) >= 0.5
+        return ((num_demolishers * 5) / damage_taken) >= 0.02
 
     # Base defense of turrets, walls, interceptors, and supports
     def base_funnel(self, game_state):
@@ -235,26 +234,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         events = state["events"]
         breaches = events["breach"]
         spawns = events["spawn"]
-
-        if self.last_enemy_spawn_update != spawns:
-            self.last_enemy_spawn_update = spawns
-
-            for spawn in spawns:
-                if spawn[1] == 0:
-                    self.hypothetical_state.game_map.add_unit(WALL, spawn[0], spawn[3]-1)
-                elif spawn[1] == 1:
-                    self.hypothetical_state.game_map.add_unit(SUPPORT, spawn[0], spawn[3]-1)
-                elif spawn[1] == 2:
-                    self.hypothetical_state.game_map.add_unit(TURRET, spawn[0], spawn[3]-1)
-
-            safest_spawn, least_damage = self.least_damage_spawn(self.hypothetical_state)
-            path_blocked, end_location = self.wall_blocking_path(self.hypothetical_state, safest_spawn)
-
-            gamelib.debug_write('END LOCATION IS ' + str(end_location), path_blocked)
-
-            if path_blocked:
-                gamelib.debug_write('USING INFILTRATOR COUNTER STRAT')
-                self.counter_infiltrator_strat = True
 
         for breach in breaches:
             location = breach[0]

@@ -56,83 +56,49 @@ class AlgoStrategy(gamelib.AlgoCore):
         # First, place basic defenses
         self.base_funnel(game_state)
 
-        # safest_spawn, least_damage = self.least_damage_spawn(game_state)
-        # path_blocked, end_location = self.wall_blocking_path(game_state, safest_spawn)
+        safest_spawn, least_damage = self.least_damage_spawn(game_state)
 
         if game_state.turn_number >= 10:
-            suicide_scout_spawn = [20, 6]
-            attacker_scout_spawn = [18, 4]
+
+            suicide_scout_spawn = []
+            attacker_scout_spawn = []
+
+            if self.get_location_side(game_state, safest_spawn) == game_state.game_map.TOP_RIGHT:
+                suicide_scout_spawn = [20, 6]
+                attacker_scout_spawn = [18, 4]
+            else:
+                suicide_scout_spawn = [4, 9]
+                attacker_scout_spawn = [13, 0]
 
             damage = self.get_damage_at_spawn(game_state, suicide_scout_spawn)
-            # path_blocked, end_location = self.wall_blocking_path(game_state, suicide_scout_spawn)
 
             if self.should_spawn_scouts(game_state, damage):
                 self.scout_spam(game_state)
             elif self.should_spawn_demolishers(game_state, damage):
                 self.demolisher_spam(game_state, safest_spawn)
 
-        # This is extremely messy, but it's just temporary
-        # safest_spawn, least_damage = self.least_damage_spawn(game_state)
-        # path_blocked, end_location = self.wall_blocking_path(game_state, safest_spawn)
-        # if (path_blocked and game_state.turn_number > 6) or self.counter_infiltrator_strat:
-        #     counter_infiltrator_strat = True
-        #     wall_side = self.get_location_side(game_state, end_location)
-        #     if self.current_infiltrator_wall_side is None:
-        #         self.current_infiltrator_wall_side = wall_side
-        #     elif self.current_infiltrator_wall_side != wall_side:
-        #         if self.current_infiltrator_wall_side == game_state.game_map.TOP_LEFT:
-        #             self.clear_infiltrator_counter_walls(game_state, game_state.game_map.BOTTOM_LEFT)
-        #         else:
-        #             self.clear_infiltrator_counter_walls(game_state, game_state.game_map.BOTTOM_RIGHT)
-        #         self.current_infiltrator_wall_side = wall_side
-        #         return
-        #     if wall_side == game_state.game_map.TOP_LEFT:
-        #         self.place_infiltrator_counter_walls(game_state, game_state.game_map.BOTTOM_LEFT)
-        #         self.spawn_infiltrator_scouts(game_state, game_state.game_map.BOTTOM_LEFT)
-        #     else:
-        #         self.place_infiltrator_counter_walls(game_state, game_state.game_map.BOTTOM_RIGHT)
-        #         self.spawn_infiltrator_scouts(game_state, game_state.game_map.BOTTOM_RIGHT)
-        # else:
-        #     if self.should_spawn_scouts(game_state, least_damage):
-        #         gamelib.debug_write('spawning scouts...')
-        #         self.scout_spam(game_state, safest_spawn)
-        #     elif self.should_spawn_demolishers(game_state, least_damage):
-        #         self.demolisher_spam(game_state, safest_spawn)
-
     def should_spawn_scouts(self, game_state, damage_taken):
         if damage_taken == 0: return True
 
-        num_scouts = self.get_scout_count(game_state)
+        num_scouts = self.get_attacker_scout_count(game_state)
 
-        return ((num_scouts * 17) / damage_taken) >= 4
+        return ((num_scouts * 17) / damage_taken) >= 2
 
     def should_spawn_demolishers(self, game_state, damage_taken):
         if damage_taken == 0: return True
 
-        num_demolishers = self.get_scout_count(game_state)
+        num_demolishers = self.get_demolisher_count(game_state)
 
         return ((num_demolishers * 5) / damage_taken) >= 0.5
 
     # Base defense of turrets, walls, interceptors, and supports
     def base_funnel(self, game_state):
-        
-        # left_side = [[0, 13], [1, 12], [2, 11], [3, 10]]
-        # right_side = [[27, 13], [26, 12], [25, 11], [24, 10]]
-
-        # if any(location in self.scored_on_locations for location in left_side):
-        #     self.place_infiltrator_walls(game_state, 'left')
-        # if any(location in self.scored_on_locations for location in right_side):
-        #     self.place_infiltrator_walls(game_state, 'right')
 
         # Base wall
         self.place_base_walls(game_state)
 
         # Turrets
         self.place_turrets(game_state)
-
-        # # Extra funnel walls
-        # wall_locations = [[10, 10], [17, 10], [11, 9], [16, 9], [13, 8], [14, 8]]
-        # game_state.attempt_spawn(WALL, wall_locations)
 
         # Supports
         if game_state.get_resource(SP, 0) >= 4:
@@ -152,19 +118,6 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         game_state.attempt_spawn(WALL, left + right)
 
-    def place_infiltrator_walls(self, game_state, side):
-        left = [[0, 13], [1, 13], [1, 12], [2, 12]]
-        right = [[27, 13], [26, 13], [26, 12], [25, 12]]
-
-        locations = None
-        if side == 'left':
-            locations = left
-        else:
-            locations = right
-
-        game_state.attempt_spawn(WALL, locations)
-        game_state.attempt_upgrade(locations)
-
     def place_turrets(self, game_state):
         turret_locations = [[18, 10], [9, 10]] # Main center turrets
         secondary_locations = [[15, 8], [12, 8]] # Close center turrets
@@ -172,9 +125,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.turn_number >= 6 and game_state.get_resource(SP, 0) >= 4:
             turret_locations.append([3, 12])
             turret_locations.append([24, 12])
-        # if game_state.turn_number >= 8 and game_state.get_resource(SP, 0) >= 12:
-        #     turret_locations.append([8, 10])
-        #     turret_locations.append([19, 10])
             
         game_state.attempt_spawn(TURRET, turret_locations)
         game_state.attempt_spawn(TURRET, secondary_locations)
@@ -212,39 +162,19 @@ class AlgoStrategy(gamelib.AlgoCore):
         for _ in range(num_interceptors):
             game_state.attempt_spawn(INTERCEPTOR, interceptor_locations)
 
-    def least_damage_interceptor_spawn(self, game_state, location_options):
-        damages = []
-        # Get the damage estimate each path will take
-        for location in location_options:
-            path = game_state.find_path_to_edge(location)
-            damage = 0
-            for path_location in path[:10]:
-                # Get number of enemy turrets that can attack each location and multiply by turret damage
-                damage += len(game_state.get_attackers(path_location, 0)) * gamelib.GameUnit(TURRET, game_state.config).damage_i
-            damages.append(damage)
-        
-        # Now just return the location that takes the least damage
-        for dmg in damages:
-            if dmg < 10:
-                return location_options[damages.index(dmg)]
-        return location_options[damages.index(min(damages))]
-
     # Returns the spawn point that will receive the least damage and the damage at that point
     def least_damage_spawn(self, game_state):
         friendly_edges = game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_RIGHT)
         deploy_locations = self.filter_blocked_locations(friendly_edges, game_state)
 
         damages = []
-        # Get the damage estimate each path will take
         for location in deploy_locations:
             path = game_state.find_path_to_edge(location)
             damage = 0
             for path_location in path[8:]: # Ignore first 8 path locations
-                # Get number of enemy turrets that can attack each location and multiply by turret damage
                 damage += len(game_state.get_attackers(path_location, 0)) * gamelib.GameUnit(TURRET, game_state.config).damage_i
             damages.append(damage)
         
-        # Now just return the location that takes the least damage
         return deploy_locations[damages.index(min(damages))], min(damages)
 
     def get_damage_at_spawn(self, game_state, spawn):
@@ -255,15 +185,6 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         return damage
 
-    def wall_blocking_path(self, game_state, spawn_location):
-        path = game_state.find_path_to_edge(spawn_location)
-
-        enemy_edges = game_state.game_map.get_edge_locations(game_state.game_map.TOP_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.TOP_RIGHT)
-
-        end_location = path[len(path)-1]
-
-        return not (end_location in enemy_edges), end_location
-
     def filter_blocked_locations(self, locations, game_state):
         filtered = []
         for location in locations:
@@ -271,15 +192,8 @@ class AlgoStrategy(gamelib.AlgoCore):
                 filtered.append(location)
         return filtered
 
-    def get_interceptor_num(self, game_state):
-        if game_state.get_resource(MP, 1) < 13 or game_state.turn_number < 15:
-            return 1
-        elif game_state.turn_number > 30 and game_state.get_resource(MP, 1) > 15: # never happens
-            return 3
-        return 2
-
-    def get_scout_count(self, game_state):
-        return trunc(game_state.get_resource(MP, 0))
+    def get_attacker_scout_count(self, game_state):
+        return trunc(game_state.get_resource(MP, 0) - 7)
 
     def demolisher_spam(self, game_state, location):
         demolisher_count = self.get_demolisher_count(game_state)
@@ -309,26 +223,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         if location[0] < 14:
             return game_state.game_map.TOP_LEFT
         return game_state.game_map.TOP_RIGHT
-
-    def place_infiltrator_counter_walls(self, game_state, side):
-        wall_locations = []
-
-        if side == game_state.game_map.BOTTOM_LEFT:
-            wall_locations = [[16, 2], [15, 2], [14, 2], [13, 2], [12, 3], [11, 4], [10, 5], [9, 6], [8, 7], [7, 8]]
-        elif side == game_state.game_map.BOTTOM_RIGHT:
-            wall_locations = [[11, 2], [12, 2], [13, 2], [14, 2], [15, 3], [16, 4], [17, 5], [18, 6], [19, 7], [20, 8]]
-
-        game_state.attempt_spawn(WALL, wall_locations)
-
-    def clear_infiltrator_counter_walls(self, game_state, side):
-        wall_locations = []
-
-        if side == game_state.game_map.BOTTOM_LEFT:
-            wall_locations = [[16, 2], [15, 2], [12, 3], [11, 4], [10, 5], [9, 6], [8, 7], [7, 8]]
-        elif side == game_state.game_map.BOTTOM_RIGHT:
-            wall_locations = [[11, 2], [12, 2], [15, 3], [16, 4], [17, 5], [18, 6], [19, 7], [20, 8]]
-
-        game_state.attempt_remove(wall_locations)
 
     def on_action_frame(self, turn_string):
         """

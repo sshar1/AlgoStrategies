@@ -65,14 +65,14 @@ class AlgoStrategy(gamelib.AlgoCore):
                 attacker_scout_spawn = [18, 4]
                 demolisher_spawn = [16, 2]
             else:
-                suicide_scout_spawn = [4, 9]
-                attacker_scout_spawn = [13, 0]
+                suicide_scout_spawn = [13, 0]
+                attacker_scout_spawn = [4, 9]
                 demolisher_spawn = [11, 2]
 
             damage = self.get_damage_at_spawn(game_state, suicide_scout_spawn)
 
             if self.should_spawn_scouts(game_state, damage):
-                self.scout_spam(game_state)
+                self.scout_spam(game_state, suicide_scout_spawn, attacker_scout_spawn)
             elif self.should_spawn_demolishers(game_state, damage):
                 self.demolisher_spam(game_state, demolisher_spawn)
 
@@ -204,13 +204,11 @@ class AlgoStrategy(gamelib.AlgoCore):
     def get_demolisher_count(self, game_state):
         return trunc(game_state.get_resource(MP, 0) / 3)
 
-    def scout_spam(self, game_state):
+    def scout_spam(self, game_state, suicide_scout_location, attacker_scout_location):
         if game_state.get_resource(MP, 0) < 13: return
 
-        suicide_scout_location = [20, 6]
         suicide_scout_num = 7
 
-        attacker_scout_location = [18, 4]
         attacker_scout_num = trunc(game_state.get_resource(MP, 0) - suicide_scout_num)
 
         for _ in range(suicide_scout_num):

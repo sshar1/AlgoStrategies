@@ -54,27 +54,27 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         safest_spawn, least_damage = self.least_damage_spawn(game_state)
 
-        if game_state.turn_number >= 10:
+        # if game_state.turn_number >= 10:
 
-            suicide_scout_spawn = []
-            attacker_scout_spawn = []
-            demolisher_spawn = []
+        #     suicide_scout_spawn = []
+        #     attacker_scout_spawn = []
+        #     demolisher_spawn = []
 
-            if self.get_location_side(game_state, safest_spawn) == game_state.game_map.TOP_RIGHT:
-                suicide_scout_spawn = [20, 6]
-                attacker_scout_spawn = [18, 4]
-                demolisher_spawn = [16, 2]
-            else:
-                suicide_scout_spawn = [4, 9]
-                attacker_scout_spawn = [13, 0]
-                demolisher_spawn = [11, 2]
+        #     if self.get_location_side(game_state, safest_spawn) == game_state.game_map.TOP_RIGHT:
+        #         suicide_scout_spawn = [20, 6]
+        #         attacker_scout_spawn = [18, 4]
+        #         demolisher_spawn = [16, 2]
+        #     else:
+        #         suicide_scout_spawn = [4, 9]
+        #         attacker_scout_spawn = [13, 0]
+        #         demolisher_spawn = [11, 2]
 
-            damage = self.get_damage_at_spawn(game_state, suicide_scout_spawn)
+        #     damage = self.get_damage_at_spawn(game_state, suicide_scout_spawn)
 
-            if self.should_spawn_scouts(game_state, damage):
-                self.scout_spam(game_state)
-            elif self.should_spawn_demolishers(game_state, damage):
-                self.demolisher_spam(game_state, demolisher_spawn)
+        #     if self.should_spawn_scouts(game_state, damage):
+        #         self.scout_spam(game_state)
+        #     elif self.should_spawn_demolishers(game_state, damage):
+        #         self.demolisher_spam(game_state, demolisher_spawn)
 
     def should_spawn_scouts(self, game_state, damage_taken):
         if damage_taken == 0: return True
@@ -104,18 +104,20 @@ class AlgoStrategy(gamelib.AlgoCore):
             self.place_supports(game_state)
 
         # Interceptors
-        if game_state.get_resource(MP, 1) > 10 or game_state.turn_number < 8:
+        if game_state.turn_number < 6:
             self.spawn_interceptors(game_state)
 
     def place_base_walls(self, game_state):
-        # [7, 10], [20, 10]
         left = [[0, 13], [1, 13], [2, 13], [3, 13], [4, 12], [5, 11], [6, 11], [8, 10], [10, 10], [11, 9], [13, 8]]
         right = [[27, 13], [26, 13], [25, 13], [24, 13], [23, 12], [22, 11], [21, 11], [19, 10], [17, 10], [16, 9], [14, 8]]
 
-        if game_state.turn_number >= 8: 
-            left.append([7, 10])
+        locations = left + right
 
-        game_state.attempt_spawn(WALL, left + right)
+        if game_state.turn_number >= 6:
+            locations.append([7, 10])
+            location.append([20, 10])
+
+        game_state.attempt_spawn(WALL, locations)
 
     def place_turrets(self, game_state):
         turret_locations = [[18, 10], [9, 10]] # Main center turrets
@@ -153,10 +155,6 @@ class AlgoStrategy(gamelib.AlgoCore):
     def spawn_interceptors(self, game_state):
         num_interceptors = 1
         interceptor_locations = [[4, 9], [23, 9]]
-
-        if game_state.turn_number >= 8:
-            interceptor_locations = [20, 6]
-            num_interceptors = 2
         
         for _ in range(num_interceptors):
             game_state.attempt_spawn(INTERCEPTOR, interceptor_locations)

@@ -49,32 +49,18 @@ class AlgoStrategy(gamelib.AlgoCore):
     """
 
     def starter_strategy(self, game_state):
+
+        attacking = game_state.get_resource(MP, 0) >= 13
+
         # First, place basic defenses
-        self.base_funnel(game_state)
+        self.base_funnel(game_state, attacking)
 
-        safest_spawn, least_damage = self.least_damage_spawn(game_state)
+        if game_state.turn_number >= 8 and attacking:
+            if game_state.contains_stationary_unit([0, 13]) or game_state.contains_stationary_unit([1, 13]):
+                game_state.attempt_remove([[0, 13], [1, 13]])
+                return
 
-        # if game_state.turn_number >= 10:
-
-        #     suicide_scout_spawn = []
-        #     attacker_scout_spawn = []
-        #     demolisher_spawn = []
-
-        #     if self.get_location_side(game_state, safest_spawn) == game_state.game_map.TOP_RIGHT:
-        #         suicide_scout_spawn = [20, 6]
-        #         attacker_scout_spawn = [18, 4]
-        #         demolisher_spawn = [16, 2]
-        #     else:
-        #         suicide_scout_spawn = [4, 9]
-        #         attacker_scout_spawn = [13, 0]
-        #         demolisher_spawn = [11, 2]
-
-        #     damage = self.get_damage_at_spawn(game_state, suicide_scout_spawn)
-
-        #     if self.should_spawn_scouts(game_state, damage):
-        #         self.scout_spam(game_state)
-        #     elif self.should_spawn_demolishers(game_state, damage):
-        #         self.demolisher_spam(game_state, demolisher_spawn)
+            self.scout_spam(game_state)
 
     def should_spawn_scouts(self, game_state, damage_taken):
         if damage_taken == 0: return True
@@ -91,10 +77,10 @@ class AlgoStrategy(gamelib.AlgoCore):
         return ((num_demolishers * 5) / damage_taken) >= 0.02
 
     # Base defense of turrets, walls, interceptors, and supports
-    def base_funnel(self, game_state):
+    def base_funnel(self, game_state, attacking):
 
         # Base wall
-        self.place_base_walls(game_state)
+        self.place_base_walls(game_state, attacking)
 
         # Turrets
         self.place_turrets(game_state)
@@ -107,34 +93,40 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.turn_number < 6:
             self.spawn_interceptors(game_state)
 
-    def place_base_walls(self, game_state):
-        left = [[0, 13], [1, 13], [2, 13], [3, 13], [4, 12], [5, 11], [6, 11], [8, 10], [10, 10], [11, 9], [13, 8]]
+    def place_base_walls(self, game_state, attacking):
+        left = [[2, 13], [3, 13], [4, 12], [5, 11], [6, 11], [8, 10], [10, 10], [11, 9], [13, 8]]
         right = [[27, 13], [26, 13], [25, 13], [24, 13], [23, 12], [22, 11], [21, 11], [19, 10], [17, 10], [16, 9], [14, 8]]
 
         locations = left + right
 
+        if not attacking:
+            locations.append([0, 13])
+            locations.append([1, 13])
+
         if game_state.turn_number >= 6:
             locations.append([7, 10])
-            location.append([20, 10])
+            locations.append([20, 10])
 
         game_state.attempt_spawn(WALL, locations)
+
+        if game_state.get_resource(SP, 0) > 25 and game_state.turn_number >= 7:
+            game_state.attempt_upgrade(turret_locations)
 
     def place_turrets(self, game_state):
         turret_locations = [[18, 10], [9, 10]] # Main center turrets
         secondary_locations = [[15, 8], [12, 8]] # Close center turrets
-        funnel_locations = [[21, 10], [21, 9], [21, 8], [21, 7], [19, 9]]
         if game_state.turn_number >= 6 and game_state.get_resource(SP, 0) >= 4:
             turret_locations.append([3, 12])
             turret_locations.append([24, 12])
+        if game_state.turn_number >= 8 and game_state.get_resource(SP, 0) >= 8:
+            turret_locations.append([7, 12])
+            turret_locations.append([20, 12])
             
         game_state.attempt_spawn(TURRET, turret_locations)
         game_state.attempt_spawn(TURRET, secondary_locations)
 
-        if game_state.get_resource(SP, 0) > 20 and game_state.turn_number >= 6:
+        if game_state.get_resource(SP, 0) > 20 and game_state.turn_number >= 3:
             game_state.attempt_upgrade(turret_locations)
-
-        if game_state.get_resource(SP, 0) > 12 and game_state.turn_number >= 8:
-            game_state.attempt_spawn(TURRET, funnel_locations)
 
     def place_supports(self, game_state):
         support_locations = []
@@ -205,10 +197,10 @@ class AlgoStrategy(gamelib.AlgoCore):
     def scout_spam(self, game_state):
         if game_state.get_resource(MP, 0) < 13: return
 
-        suicide_scout_location = [20, 6]
+        suicide_scout_location = [14, 0]
         suicide_scout_num = 7
 
-        attacker_scout_location = [18, 4]
+        attacker_scout_location = [21, 7]
         attacker_scout_num = trunc(game_state.get_resource(MP, 0) - suicide_scout_num)
 
         for _ in range(suicide_scout_num):

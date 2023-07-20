@@ -56,6 +56,21 @@ class AlgoStrategy(gamelib.AlgoCore):
         # First, place basic defenses
         self.base_funnel(game_state)
 
+        # safest_spawn, least_damage = self.least_damage_spawn(game_state)
+        # path_blocked, end_location = self.wall_blocking_path(game_state, safest_spawn)
+
+        if game_state.turn_number >= 10:
+            suicide_scout_spawn = [20, 6]
+            attacker_scout_spawn = [18, 4]
+
+            damage = self.get_damage_at_spawn(game_state, suicide_scout_spawn)
+            # path_blocked, end_location = self.wall_blocking_path(game_state, suicide_scout_spawn)
+
+            if self.should_spawn_scouts(game_state, damage):
+                self.scout_spam(game_state)
+            elif self.should_spawn_demolishers(game_state, damage):
+                self.demolisher_spam(game_state, safest_spawn)
+
         # This is extremely messy, but it's just temporary
         # safest_spawn, least_damage = self.least_damage_spawn(game_state)
         # path_blocked, end_location = self.wall_blocking_path(game_state, safest_spawn)
@@ -232,6 +247,14 @@ class AlgoStrategy(gamelib.AlgoCore):
         # Now just return the location that takes the least damage
         return deploy_locations[damages.index(min(damages))], min(damages)
 
+    def get_damage_at_spawn(self, game_state, spawn):
+        path = game_state.find_path_to_edge(spawn)
+        damage = 0
+        for path_location in path:
+            damage += len(game_state.get_attackers(path_location, 0)) * gamelib.GameUnit(TURRET, game_state.config).damage_i
+
+        return damage
+
     def wall_blocking_path(self, game_state, spawn_location):
         path = game_state.find_path_to_edge(spawn_location)
 
@@ -255,13 +278,6 @@ class AlgoStrategy(gamelib.AlgoCore):
             return 3
         return 2
 
-    def scout_spam(self, game_state, location):
-        scout_count = self.get_scout_count(game_state)
-        if scout_count <= 4: return
-
-        for _ in range(scout_count):
-            game_state.attempt_spawn(SCOUT, location)
-
     def get_scout_count(self, game_state):
         return trunc(game_state.get_resource(MP, 0))
 
@@ -275,21 +291,14 @@ class AlgoStrategy(gamelib.AlgoCore):
     def get_demolisher_count(self, game_state):
         return trunc(game_state.get_resource(MP, 0) / 3)
 
-    def spawn_infiltrator_scouts(self, game_state, side):
+    def scout_spam(self, game_state):
         if game_state.get_resource(MP, 0) < 13: return
 
-        suicide_scout_location = []
+        suicide_scout_location = [20, 6]
         suicide_scout_num = 7
 
-        attacker_scout_location = []
+        attacker_scout_location = [18, 4]
         attacker_scout_num = trunc(game_state.get_resource(MP, 0) - suicide_scout_num)
-
-        if side == game_state.game_map.BOTTOM_LEFT:
-            suicide_scout_location = [20, 6]
-            attacker_scout_location = [15, 1]
-        else:
-            suicide_scout_location = [7, 6]
-            attacker_scout_location = [12, 1]
 
         for _ in range(suicide_scout_num):
             game_state.attempt_spawn(SCOUT, suicide_scout_location)

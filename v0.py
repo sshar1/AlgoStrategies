@@ -110,7 +110,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         game_state.attempt_spawn(WALL, locations)
 
         if game_state.get_resource(SP, 0) > 25 and game_state.turn_number >= 7:
-            game_state.attempt_upgrade(turret_locations)
+            game_state.attempt_upgrade(locations)
 
     def place_turrets(self, game_state):
         turret_locations = [[18, 10], [9, 10]] # Main center turrets

@@ -132,6 +132,9 @@ class AlgoStrategy(gamelib.AlgoCore):
         left = [[0, 13], [1, 13], [2, 13], [3, 13], [4, 12], [5, 11], [6, 11], [8, 10], [10, 10], [11, 9], [13, 8]]
         right = [[27, 13], [26, 13], [25, 13], [24, 13], [23, 12], [22, 11], [21, 11], [19, 10], [17, 10], [16, 9], [14, 8]]
 
+        if game_state.turn_number >= 8: 
+            left.append([7, 10])
+
         game_state.attempt_spawn(WALL, left + right)
 
     def place_infiltrator_walls(self, game_state, side):
@@ -154,9 +157,9 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.turn_number >= 6 and game_state.get_resource(SP, 0) >= 4:
             turret_locations.append([3, 12])
             turret_locations.append([24, 12])
-        if game_state.turn_number >= 8 and game_state.get_resource(SP, 0) >= 12:
-            turret_locations.append([8, 10])
-            turret_locations.append([19, 10])
+        # if game_state.turn_number >= 8 and game_state.get_resource(SP, 0) >= 12:
+        #     turret_locations.append([8, 10])
+        #     turret_locations.append([19, 10])
             
         game_state.attempt_spawn(TURRET, turret_locations)
         game_state.attempt_spawn(TURRET, secondary_locations)
@@ -184,8 +187,12 @@ class AlgoStrategy(gamelib.AlgoCore):
             game_state.attempt_upgrade(support_locations)
 
     def spawn_interceptors(self, game_state):
-        num_interceptors = self.get_interceptor_num(game_state)
+        num_interceptors = 1
         interceptor_locations = [[4, 9], [23, 9]]
+
+        if game_state.turn_number >= 8:
+            interceptor_locations = [20, 6]
+            num_interceptors = 2
         
         for _ in range(num_interceptors):
             game_state.attempt_spawn(INTERCEPTOR, interceptor_locations)

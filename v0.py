@@ -60,7 +60,7 @@ class AlgoStrategy(gamelib.AlgoCore):
                 game_state.attempt_remove([1, 13])
                 return
 
-            self.scout_spam(game_state)
+            self.infiltrate(game_state)
 
     # Base defense of turrets, walls, interceptors, and supports
     def base_funnel(self, game_state, attacking):
@@ -130,36 +130,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.get_resource(SP, 0) > 20 and game_state.turn_number >= 8:
             game_state.attempt_upgrade(support_locations)
 
-    def spawn_interceptors(self, game_state):
-        num_interceptors = 1
-        interceptor_locations = [[4, 9], [23, 9]]
-        
-        for _ in range(num_interceptors):
-            game_state.attempt_spawn(INTERCEPTOR, interceptor_locations)
-
-    # Returns the spawn point that will receive the least damage and the damage at that point
-    def least_damage_spawn(self, game_state):
-        friendly_edges = game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_LEFT) + game_state.game_map.get_edge_locations(game_state.game_map.BOTTOM_RIGHT)
-        deploy_locations = self.filter_blocked_locations(friendly_edges, game_state)
-
-        damages = []
-        for location in deploy_locations:
-            path = game_state.find_path_to_edge(location)
-            damage = 0
-            for path_location in path[8:]: # Ignore first 8 path locations
-                damage += len(game_state.get_attackers(path_location, 0)) * gamelib.GameUnit(TURRET, game_state.config).damage_i
-            damages.append(damage)
-        
-        return deploy_locations[damages.index(min(damages))], min(damages)
-
-    def get_damage_at_spawn(self, game_state, spawn):
-        path = game_state.find_path_to_edge(spawn)
-        damage = 0
-        for path_location in path:
-            damage += len(game_state.get_attackers(path_location, 0)) * gamelib.GameUnit(TURRET, game_state.config).damage_i
-
-        return damage
-
     def filter_blocked_locations(self, locations, game_state):
         filtered = []
         for location in locations:
@@ -167,37 +137,19 @@ class AlgoStrategy(gamelib.AlgoCore):
                 filtered.append(location)
         return filtered
 
-    def get_attacker_scout_count(self, game_state):
-        return trunc(game_state.get_resource(MP, 0) - 7)
-
-    def demolisher_spam(self, game_state, location):
-        demolisher_count = self.get_demolisher_count(game_state)
-        if demolisher_count <= 3: return
-
-        for _ in range(demolisher_count):
-            game_state.attempt_spawn(DEMOLISHER, location)
-
-    def get_demolisher_count(self, game_state):
-        return trunc(game_state.get_resource(MP, 0) / 3)
-
-    def scout_spam(self, game_state):
+    def infiltrate(self, game_state):
         if game_state.get_resource(MP, 0) < 13: return
 
-        suicide_scout_location = [14, 0]
-        suicide_scout_num = 7
+        suicide_interceptor_location = [24, 10]
+        suicide_interceptor_num = 4 # TODO CHANGE THIS TO 3 IF LESS THAN 60 HEALTH
 
-        attacker_scout_location = [21, 7]
-        attacker_scout_num = trunc(game_state.get_resource(MP, 0) - suicide_scout_num)
+        attacker_scout_location = [14, 0]
+        attacker_scout_num = trunc(game_state.get_resource(MP, 0) - suicide_interceptor_num)
 
-        for _ in range(suicide_scout_num):
-            game_state.attempt_spawn(SCOUT, suicide_scout_location)
+        for _ in range(suicide_interceptor_num):
+            game_state.attempt_spawn(INTERCEPTOR, suicide_scout_location)
         for _ in range(attacker_scout_num):
             game_state.attempt_spawn(SCOUT, attacker_scout_location)
-
-    def get_location_side(self, game_state, location):
-        if location[0] < 14:
-            return game_state.game_map.TOP_LEFT
-        return game_state.game_map.TOP_RIGHT
 
     def on_action_frame(self, turn_string):
         """

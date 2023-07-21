@@ -50,12 +50,12 @@ class AlgoStrategy(gamelib.AlgoCore):
 
     def starter_strategy(self, game_state):
 
-        attacking = game_state.get_resource(MP, 0) >= 13
+        attacking = game_state.get_resource(MP, 0) >= 10
 
         # First, place basic defenses
         self.base_funnel(game_state, attacking)
 
-        if game_state.turn_number >= 3 and attacking:
+        if game_state.turn_number >= 2 and attacking:
             if game_state.contains_stationary_unit([1, 13]):
                 game_state.attempt_remove([1, 13])
                 return
@@ -158,26 +158,27 @@ class AlgoStrategy(gamelib.AlgoCore):
             game_state.attempt_spawn(SCOUT, attacker_scout_location)
 
     def on_action_frame(self, turn_string):
+        pass
         """
         This is the action frame of the game. This function could be called
         hundreds of times per turn and could slow the algo down so avoid putting slow code here.
         Processing the action frames is complicated so we only suggest it if you have time and experience.
         Full doc on format of a game frame at in json-docs.html in the root of the Starterkit.
         """
-        state = json.loads(turn_string)
-        events = state["events"]
-        breaches = events["breach"]
-        spawns = events["spawn"]
+        # state = json.loads(turn_string)
+        # events = state["events"]
+        # breaches = events["breach"]
+        # spawns = events["spawn"]
 
-        for breach in breaches:
-            location = breach[0]
-            unit_owner_self = True if breach[4] == 1 else False
-            # When parsing the frame data directly,
-            # 1 is integer for yourself, 2 is opponent (StarterKit code uses 0, 1 as player_index instead)
-            if not unit_owner_self:
-                gamelib.debug_write("Got scored on at: {}".format(location))
-                self.scored_on_locations.append(location)
-                gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
+        # for breach in breaches:
+        #     location = breach[0]
+        #     unit_owner_self = True if breach[4] == 1 else False
+        #     # When parsing the frame data directly,
+        #     # 1 is integer for yourself, 2 is opponent (StarterKit code uses 0, 1 as player_index instead)
+        #     if not unit_owner_self:
+        #         gamelib.debug_write("Got scored on at: {}".format(location))
+        #         self.scored_on_locations.append(location)
+        #         gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
 
 
 if __name__ == "__main__":

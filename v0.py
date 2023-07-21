@@ -75,12 +75,8 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.get_resource(SP, 0) >= 4:
             self.place_supports(game_state)
 
-        # Interceptors
-        if game_state.turn_number < 4:
-            self.spawn_interceptors(game_state)
-
     def place_base_walls(self, game_state, attacking):
-        left = [[2, 13], [3, 13], [4, 12], [5, 11], [6, 11], [7, 10], [8, 10], [10, 10], [11, 9], [12, 8], [13, 8]]
+        left = [[0, 13], [2, 13], [3, 13], [4, 12], [5, 11], [6, 11], [7, 10], [8, 10], [10, 10], [11, 9], [12, 8], [13, 8]]
         right = [[27, 13], [26, 13], [25, 13], [24, 13], [23, 12], [22, 11], [21, 11], [20, 10], [19, 10], [17, 10], [16, 9], [14, 8], [15, 8]]
 
         locations = left + right
@@ -119,15 +115,15 @@ class AlgoStrategy(gamelib.AlgoCore):
     def place_supports(self, game_state):
         support_locations = []
         if game_state.turn_number >= 4:
-            support_locations.append([19, 9])
-            support_locations.append([20, 9])
+            support_locations.append([7, 9])
+            support_locations.append([8, 9])
         if game_state.turn_number >= 6:
-            support_locations.append([19, 8])
-            support_locations.append([20, 8])
+            support_locations.append([7, 8])
+            support_locations.append([8, 8])
 
         game_state.attempt_spawn(SUPPORT, support_locations)
 
-        if game_state.get_resource(SP, 0) > 20 and game_state.turn_number >= 8:
+        if game_state.get_resource(SP, 0) > 20 and game_state.turn_number >= 6:
             game_state.attempt_upgrade(support_locations)
 
     def filter_blocked_locations(self, locations, game_state):
@@ -140,14 +136,24 @@ class AlgoStrategy(gamelib.AlgoCore):
     def infiltrate(self, game_state):
         if game_state.get_resource(MP, 0) < 13: return
 
-        suicide_interceptor_location = [24, 10]
-        suicide_interceptor_num = 4 # TODO CHANGE THIS TO 3 IF LESS THAN 60 HEALTH
+        suicide_interceptor_location = [3, 10]
+        suicide_interceptor_num = 4
+        
+        max_health = 0
+        if game_state.contains_stationary_unit([1, 14]):
+            max_health = game_state.game_map[1, 14][0].health
+        if game_state.contains_stationary_unit([0, 14]):
+            h = game_state.game_map[0, 14][0].health
+            max_health = h if h > max_health else max_health
+        
+        if max_health <= 60:
+            suicide_interceptor_num = 3
 
         attacker_scout_location = [14, 0]
         attacker_scout_num = trunc(game_state.get_resource(MP, 0) - suicide_interceptor_num)
 
         for _ in range(suicide_interceptor_num):
-            game_state.attempt_spawn(INTERCEPTOR, suicide_scout_location)
+            game_state.attempt_spawn(INTERCEPTOR, suicide_interceptor_location)
         for _ in range(attacker_scout_num):
             game_state.attempt_spawn(SCOUT, attacker_scout_location)
 

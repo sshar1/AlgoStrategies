@@ -99,25 +99,25 @@ class AlgoStrategy(gamelib.AlgoCore):
             game_state.attempt_upgrade(upgrade_locations)
 
     def place_turrets(self, game_state):
-        turret_locations = [[18, 10], [9, 10]] # Main center turrets
-        if game_state.turn_number >= 6 and game_state.get_resource(SP, 0) >= 4:
-            turret_locations.append([3, 12])
-            turret_locations.append([24, 12])
-        if game_state.turn_number >= 8 and game_state.get_resource(SP, 0) >= 8:
+        turret_locations = [[18, 10], [9, 10], [6, 10], [21, 10], [24, 12], [3, 12]] # Main center turrets
+        if game_state.turn_number >= 4 and game_state.get_resource(SP, 0) >= 4:
             turret_locations.append([7, 12])
             turret_locations.append([20, 12])
+        if game_state.turn_number >= 4 and game_state.get_resource(SP, 0) >= 8:
+            turret_locations.append([11, 8])
+            turret_locations.append([16, 8])
             
         game_state.attempt_spawn(TURRET, turret_locations)
 
-        if game_state.get_resource(SP, 0) > 20 and game_state.turn_number >= 6:
+        if game_state.get_resource(SP, 0) > 30 and game_state.turn_number >= 6:
             game_state.attempt_upgrade(turret_locations)
 
     def place_supports(self, game_state):
         support_locations = []
-        if game_state.turn_number >= 4:
+        if game_state.turn_number >= 3:
             support_locations.append([7, 9])
             support_locations.append([8, 9])
-        if game_state.turn_number >= 6:
+        if game_state.turn_number >= 5:
             support_locations.append([7, 8])
             support_locations.append([8, 8])
 

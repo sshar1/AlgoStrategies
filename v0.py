@@ -48,6 +48,8 @@ class AlgoStrategy(gamelib.AlgoCore):
 
     def starter_strategy(self, game_state):
 
+        num_interceptors = 
+
         attacking = game_state.get_resource(MP, 0) >= 10
 
         # First, place basic defenses
@@ -146,25 +148,28 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.get_resource(MP, 0) < 13: return
 
         suicide_interceptor_location = [3, 10]
-        suicide_interceptor_num = 4
-        
+        suicide_interceptor_num = self.get_num_interceptors(game_state)
+
+        attacker_scout_location = [14, 0]
+        attacker_scout_num = self.get_num_scouts(game_state, suicide_interceptor_num)
+
+        for _ in range(suicide_interceptor_num):
+            game_state.attempt_spawn(INTERCEPTOR, suicide_interceptor_location)
+        for _ in range(attacker_scout_num):
+            game_state.attempt_spawn(SCOUT, attacker_scout_location)
+
+    def get_num_interceptors(self, game_state):
         max_health = 0
         if game_state.contains_stationary_unit([1, 14]):
             max_health = game_state.game_map[1, 14][0].health
         if game_state.contains_stationary_unit([0, 14]):
             h = game_state.game_map[0, 14][0].health
             max_health = h if h > max_health else max_health
-        
-        if max_health <= 60:
-            suicide_interceptor_num = 3
 
-        attacker_scout_location = [14, 0]
-        attacker_scout_num = trunc(game_state.get_resource(MP, 0) - suicide_interceptor_num)
+        return 3 if max_health <= 60 else return 4
 
-        for _ in range(suicide_interceptor_num):
-            game_state.attempt_spawn(INTERCEPTOR, suicide_interceptor_location)
-        for _ in range(attacker_scout_num):
-            game_state.attempt_spawn(SCOUT, attacker_scout_location)
+    def get_num_scouts(self, game_state, interceptor_num):
+        trunc(game_state.get_resource(MP, 0) - interceptor_num)
 
     def on_action_frame(self, turn_string):
         pass

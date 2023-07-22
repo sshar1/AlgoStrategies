@@ -51,7 +51,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         num_interceptors = self.get_num_interceptors(game_state)
         num_scouts = self.get_num_scouts(game_state, num_interceptors)
 
-        attacking = num_scouts >= 6 or (game_state.enemy_health < num_scouts)
+        attacking = num_scouts >= 8 or (game_state.enemy_health < num_scouts)
 
         # First, place basic defenses
         self.base_funnel(game_state, attacking)

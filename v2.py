@@ -136,6 +136,11 @@ class AlgoStrategy(gamelib.AlgoCore):
             
         game_state.attempt_spawn(TURRET, turret_locations)
 
+        for location in turret_locations:
+            if game_state.contains_stationary_unit(location) and game_state.game_map[location[0], location[1]][0].unit_type == TURRET:
+                if game_state.game_map[location[0], location[1]][0].health < 30:
+                    game_state.attempt_remove(location)
+
         if game_state.get_resource(SP, 0) > 30 and game_state.turn_number >= 6:
             game_state.attempt_upgrade(turret_locations)
 

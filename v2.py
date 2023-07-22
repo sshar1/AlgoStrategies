@@ -101,11 +101,6 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         game_state.attempt_spawn(WALL, locations)
 
-        if game_state.turn_number > 4:
-            game_state.attempt_upgrade(left[:1] + right[:4])
-            if game_state.contains_stationary_unit([1, 13]):
-                game_state.attempt_upgrade([1, 13])
-
         upgrade_locations = []
         for location in locations:
             if game_state.contains_stationary_unit(location) and game_state.game_map[location[0], location[1]][0].unit_type == WALL:
@@ -115,6 +110,11 @@ class AlgoStrategy(gamelib.AlgoCore):
                     game_state.attempt_remove(location)
                 elif not game_state.game_map[location[0], location[1]][0].upgraded and game_state.turn_number >= 6:
                     upgrade_locations.append(location)
+
+        if game_state.turn_number > 4:
+            game_state.attempt_upgrade(left[:1] + right[:4])
+            if game_state.contains_stationary_unit([1, 13]):
+                game_state.attempt_upgrade([1, 13])
 
         if game_state.get_resource(SP, 0) > len(upgrade_locations) and game_state.turn_number >= 6:
             game_state.attempt_upgrade(upgrade_locations)

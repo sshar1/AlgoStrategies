@@ -34,7 +34,6 @@ class AlgoStrategy(gamelib.AlgoCore):
 
     def on_turn(self, turn_state):
         game_state = gamelib.GameState(self.config, turn_state)
-        self.hypothetical_state = gamelib.GameState(self.config, turn_state)
         self.game_state = game_state
         gamelib.debug_write('Performing turn {} of your custom algo strategy'.format(game_state.turn_number))
         game_state.suppress_warnings(True)  #Comment or remove this line to enable warnings.
@@ -126,13 +125,6 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.get_resource(SP, 0) > 20 and game_state.turn_number >= 6:
             game_state.attempt_upgrade(support_locations)
 
-    def filter_blocked_locations(self, locations, game_state):
-        filtered = []
-        for location in locations:
-            if not game_state.contains_stationary_unit(location):
-                filtered.append(location)
-        return filtered
-
     def infiltrate(self, game_state):
         if game_state.get_resource(MP, 0) < 13: return
 
@@ -159,26 +151,6 @@ class AlgoStrategy(gamelib.AlgoCore):
 
     def on_action_frame(self, turn_string):
         pass
-        """
-        This is the action frame of the game. This function could be called
-        hundreds of times per turn and could slow the algo down so avoid putting slow code here.
-        Processing the action frames is complicated so we only suggest it if you have time and experience.
-        Full doc on format of a game frame at in json-docs.html in the root of the Starterkit.
-        """
-        # state = json.loads(turn_string)
-        # events = state["events"]
-        # breaches = events["breach"]
-        # spawns = events["spawn"]
-
-        # for breach in breaches:
-        #     location = breach[0]
-        #     unit_owner_self = True if breach[4] == 1 else False
-        #     # When parsing the frame data directly,
-        #     # 1 is integer for yourself, 2 is opponent (StarterKit code uses 0, 1 as player_index instead)
-        #     if not unit_owner_self:
-        #         gamelib.debug_write("Got scored on at: {}".format(location))
-        #         self.scored_on_locations.append(location)
-        #         gamelib.debug_write("All locations: {}".format(self.scored_on_locations))
 
 
 if __name__ == "__main__":

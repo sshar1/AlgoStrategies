@@ -169,8 +169,10 @@ class AlgoStrategy(gamelib.AlgoCore):
             h = game_state.game_map[0, 14][0].health
             max_health = h if h > max_health else max_health
 
-        if self.get_damage_at_spawn(game_state, [3, 10]) > 10:
-            return 6
+        if self.get_damage_at_spawn(game_state, [3, 10]) > 30:
+            if max_health <= 30:
+                return 6
+            return 7
 
         return 3 if max_health <= 60 else 4
 

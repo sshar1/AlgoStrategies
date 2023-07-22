@@ -48,7 +48,8 @@ class AlgoStrategy(gamelib.AlgoCore):
 
     def starter_strategy(self, game_state):
 
-        num_interceptors = 
+        num_interceptors = self.get_num_interceptors(game_state)
+        num_scouts = self.get_num_scouts(game_state, num_interceptors)
 
         attacking = game_state.get_resource(MP, 0) >= 10
 
@@ -166,10 +167,10 @@ class AlgoStrategy(gamelib.AlgoCore):
             h = game_state.game_map[0, 14][0].health
             max_health = h if h > max_health else max_health
 
-        return 3 if max_health <= 60 else return 4
+        return 3 if max_health <= 60 else 4
 
     def get_num_scouts(self, game_state, interceptor_num):
-        trunc(game_state.get_resource(MP, 0) - interceptor_num)
+        return trunc(game_state.get_resource(MP, 0) - interceptor_num)
 
     def on_action_frame(self, turn_string):
         pass

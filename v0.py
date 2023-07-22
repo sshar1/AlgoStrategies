@@ -5,7 +5,6 @@ import warnings
 from sys import maxsize
 import json
 from math import *
-import copy
 
 class AlgoStrategy(gamelib.AlgoCore):
     def __init__(self):
@@ -75,7 +74,7 @@ class AlgoStrategy(gamelib.AlgoCore):
             self.place_supports(game_state)
 
     def place_base_walls(self, game_state, attacking):
-        left = [[0, 13], [2, 13], [3, 13], [4, 12], [5, 11], [6, 11], [7, 10], [8, 10], [10, 10], [11, 9], [12, 8], [13, 8]]
+        left = [[3, 13], [4, 12], [5, 11], [6, 11], [7, 10], [8, 10], [10, 10], [11, 9], [12, 8], [13, 8]]
         right = [[27, 13], [26, 13], [25, 13], [24, 13], [23, 12], [22, 11], [21, 11], [20, 10], [19, 10], [17, 10], [16, 9], [14, 8], [15, 8]]
 
         locations = left + right
@@ -83,7 +82,16 @@ class AlgoStrategy(gamelib.AlgoCore):
         if not attacking:
             locations.append([1, 13])
 
+        if game_state.turn_number < 3:
+            locations.append([0, 13])
+            locations.append([2, 13])
+        else:
+            game_state.attempt_remove([[0, 13], [2, 13]])
+
         game_state.attempt_spawn(WALL, locations)
+
+        if game_state.turn_number > 2:
+            game_state.attempt_upgrade(left[:2] + right[:4])
 
         upgrade_locations = []
         if game_state.turn_number >= 6:
@@ -98,13 +106,17 @@ class AlgoStrategy(gamelib.AlgoCore):
             game_state.attempt_upgrade(upgrade_locations)
 
     def place_turrets(self, game_state):
-        turret_locations = [[18, 10], [9, 10], [6, 10], [21, 10], [24, 12], [3, 12]] # Main center turrets
+        turret_locations = [[18, 10], [9, 10], [6, 10], [21, 10], [24, 12], [3, 12]]
         if game_state.turn_number >= 4 and game_state.get_resource(SP, 0) >= 4:
             turret_locations.append([7, 12])
             turret_locations.append([20, 12])
         if game_state.turn_number >= 4 and game_state.get_resource(SP, 0) >= 8:
             turret_locations.append([11, 8])
             turret_locations.append([16, 8])
+
+        if game_state.turn_number >= 3 and game_state.get_resource(SP, 0) >= 10:
+            game_state.attempt_spawn(TURRET, [[0, 13], [2, 13]])
+            game_state.attempt_upgrade(TURRET, [[0, 13], [2, 13]])
             
         game_state.attempt_spawn(TURRET, turret_locations)
 

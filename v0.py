@@ -51,7 +51,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         num_interceptors = self.get_num_interceptors(game_state)
         num_scouts = self.get_num_scouts(game_state, num_interceptors)
 
-        attacking = game_state.get_resource(MP, 0) >= 10
+        attacking = game_state.get_resource(MP, 0) >= 13 or (game_state.enemy_health < num_scouts)
 
         # First, place basic defenses
         self.base_funnel(game_state, attacking)
@@ -146,7 +146,6 @@ class AlgoStrategy(gamelib.AlgoCore):
             game_state.attempt_upgrade(support_locations)
 
     def infiltrate(self, game_state):
-        if game_state.get_resource(MP, 0) < 13: return
 
         suicide_interceptor_location = [3, 10]
         suicide_interceptor_num = self.get_num_interceptors(game_state)

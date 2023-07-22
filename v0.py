@@ -82,16 +82,21 @@ class AlgoStrategy(gamelib.AlgoCore):
         if not attacking:
             locations.append([1, 13])
 
-        if game_state.turn_number < 3:
+        if game_state.turn_number < 2:
             locations.append([0, 13])
             locations.append([2, 13])
         else:
-            game_state.attempt_remove([[0, 13], [2, 13]])
+            if game_state.contains_stationary_unit([0, 13]) and game_state.game_map[0, 13][0].unit_type == WALL:
+                game_state.attempt_remove([0, 13])
+            if game_state.contains_stationary_unit([2, 13]) and game_state.game_map[2, 13][0].unit_type == WALL:
+                game_state.attempt_remove([2, 13])
 
         game_state.attempt_spawn(WALL, locations)
 
         if game_state.turn_number > 2:
-            game_state.attempt_upgrade(left[:2] + right[:4])
+            game_state.attempt_upgrade(left[:1] + right[:4])
+            if game_state.contains_stationary_unit([1, 13]):
+                game_state.attempt_upgrade([1, 13])
 
         upgrade_locations = []
         if game_state.turn_number >= 6:
@@ -116,7 +121,7 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         if game_state.turn_number >= 3 and game_state.get_resource(SP, 0) >= 10:
             game_state.attempt_spawn(TURRET, [[0, 13], [2, 13]])
-            game_state.attempt_upgrade(TURRET, [[0, 13], [2, 13]])
+            game_state.attempt_upgrade([[0, 13], [2, 13]])
             
         game_state.attempt_spawn(TURRET, turret_locations)
 

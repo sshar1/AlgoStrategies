@@ -90,7 +90,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         if not attacking:
             locations.append([1, 13])
 
-        if game_state.turn_number < 2 and self.can_place_corner_turrets(game_state):
+        if game_state.turn_number < 2 or not self.can_place_corner_turrets(game_state):
             locations.append([0, 13])
             locations.append([2, 13])
         elif self.can_place_corner_turrets(game_state):
@@ -101,7 +101,7 @@ class AlgoStrategy(gamelib.AlgoCore):
 
         game_state.attempt_spawn(WALL, locations)
 
-        if game_state.turn_number > 2:
+        if game_state.turn_number > 4:
             game_state.attempt_upgrade(left[:1] + right[:4])
             if game_state.contains_stationary_unit([1, 13]):
                 game_state.attempt_upgrade([1, 13])
@@ -109,7 +109,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         upgrade_locations = []
         if game_state.turn_number >= 6:
             for location in locations:
-                if game_state.contains_stationary_unit(location):
+                if game_state.contains_stationary_unit(location) and game_state.game_map[location[0], location[1]][0].unit_type == WALL:
                     if game_state.game_map[location[0], location[1]][0].health < 80 and game_state.game_map[location[0], location[1]][0].upgraded:
                         game_state.attempt_remove(location)
                     elif not game_state.game_map[location[0], location[1]][0].upgraded:
@@ -123,13 +123,15 @@ class AlgoStrategy(gamelib.AlgoCore):
         if game_state.turn_number >= 4 and game_state.get_resource(SP, 0) >= 4:
             turret_locations.append([7, 12])
             turret_locations.append([20, 12])
-        if game_state.turn_number >= 4 and game_state.get_resource(SP, 0) >= 8:
+        if game_state.turn_number >= 4 and game_state.get_resource(SP, 0) >= 4:
             turret_locations.append([11, 8])
             turret_locations.append([16, 8])
 
         if self.can_place_corner_turrets(game_state):
             game_state.attempt_spawn(TURRET, [[0, 13], [2, 13]])
-            game_state.attempt_upgrade([[0, 13], [2, 13]])
+            if game_state.contains_stationary_unit([0, 13]) and game_state.contains_stationary_unit([2, 13]):
+                if game_state.game_map[0, 13][0].unit_type == TURRET and game_state.game_map[2, 13][0].unit_type == TURRET and game_state.get_resource(SP, 0) >= 10:
+                    game_state.attempt_upgrade([[0, 13], [2, 13]])
             
         game_state.attempt_spawn(TURRET, turret_locations)
 
@@ -198,7 +200,7 @@ class AlgoStrategy(gamelib.AlgoCore):
         return True
 
     def can_place_corner_turrets(self, game_state):
-        return game_state.turn_number >= 3 and game_state.get_resource(SP, 0) >= 10
+        return game_state.get_resource(SP, 0) >= 4
 
     def on_action_frame(self, turn_string):
         pass
